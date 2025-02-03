@@ -22,3 +22,10 @@ export interface ClientDetailsModalProps {
   onClose: () => void;
   client: Client;
 }
+
+export interface ConfirmationModalProps {
+  isOpen: boolean;
+  onClose: () => void; // Cierra el modal
+  onConfirm: () => void; // Ejecuta la acción de confirmación
+  message: string; // Mensaje de confirmación
+}

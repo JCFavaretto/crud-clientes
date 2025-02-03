@@ -16,6 +16,7 @@ import ClientList from "../components/ClientList";
 import ClientFilter from "../components/ClientFilter";
 import Modal from "../components/Modal";
 import ClientDetailsModal from "../components/ClientDetailsModal";
+import ConfirmationModal from "../components/ConfirmationModal"; // Importar el modal de confirmación
 import { Client } from "../types/Client";
 
 export default function Home() {
@@ -23,8 +24,10 @@ export default function Home() {
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // Estado para el modal de confirmación
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [viewedClient, setViewedClient] = useState<Client | null>(null);
+  const [clientIdToDelete, setClientIdToDelete] = useState<string | null>(null); // ID del cliente a eliminar
 
   // Obtener todos los clientes de Firebase
   const fetchClients = async () => {
@@ -35,7 +38,6 @@ export default function Home() {
         ...doc.data(),
       })) as Client[];
       setClients(clientsData);
-      console.log(clientsData);
       setFilteredClients(clientsData);
     } catch (error) {
       console.error("Error al obtener clientes:", error);
@@ -49,9 +51,7 @@ export default function Home() {
   // Filtrar y ordenar clientes
   const handleFilter = async (searchTerm: string, sortBy: string) => {
     let q;
-
     const [field, order] = sortBy.split("-") as [string, "asc" | "desc"];
-
     if (searchTerm) {
       q = query(
         collection(db, "clients"),
@@ -62,29 +62,17 @@ export default function Home() {
     } else {
       q = query(collection(db, "clients"), orderBy(field, order));
     }
-
     const querySnapshot = await getDocs(q);
     const filteredData = querySnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     })) as Client[];
-
     setFilteredClients(filteredData);
   };
 
   // Reiniciar filtros
   const handleReset = () => {
     setFilteredClients(clients); // Restaurar la lista original
-  };
-
-  // Eliminar cliente
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteDoc(doc(db, "clients", id));
-      fetchClients(); // Actualizar lista
-    } catch (error) {
-      console.error("Error al eliminar cliente:", error);
-    }
   };
 
   // Abrir modal para agregar/editar cliente
@@ -112,9 +100,36 @@ export default function Home() {
     setIsDetailsModalOpen(false);
   };
 
+  // Abrir modal de confirmación para eliminar
+  const handleDelete = (id: string) => {
+    setClientIdToDelete(id); // Guardar el ID del cliente a eliminar
+    setIsDeleteModalOpen(true); // Mostrar el modal de confirmación
+  };
+
+  // Confirmar eliminación
+  const confirmDelete = async () => {
+    if (clientIdToDelete) {
+      try {
+        await deleteDoc(doc(db, "clients", clientIdToDelete)); // Eliminar cliente
+        fetchClients(); // Actualizar lista
+      } catch (error) {
+        console.error("Error al eliminar cliente:", error);
+      } finally {
+        setIsDeleteModalOpen(false); // Cerrar el modal
+        setClientIdToDelete(null); // Limpiar el ID
+      }
+    }
+  };
+
+  // Cancelar eliminación
+  const cancelDelete = () => {
+    setIsDeleteModalOpen(false); // Cerrar el modal
+    setClientIdToDelete(null); // Limpiar el ID
+  };
+
   return (
     <div className="p-4">
-      <div className="flex justify-between items-center ">
+      <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold mb-4">CRUD de Clientes</h1>
         <button
           onClick={handleAdd}
@@ -126,9 +141,9 @@ export default function Home() {
       <ClientFilter onFilter={handleFilter} onReset={handleReset} />
       <ClientList
         clients={filteredClients}
-        onDelete={handleDelete}
+        onDelete={handleDelete} // Pasar la función para abrir el modal de confirmación
         onEdit={handleEdit}
-        onView={handleView} // Pasar la función para abrir el modal de detalles
+        onView={handleView}
       />
       {/* Modal de Formulario */}
       {isModalOpen && (
@@ -146,6 +161,15 @@ export default function Home() {
           isOpen={isDetailsModalOpen}
           onClose={handleCloseDetailsModal}
           client={viewedClient}
+        />
+      )}
+      {/* Modal de Confirmación */}
+      {isDeleteModalOpen && (
+        <ConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={cancelDelete}
+          onConfirm={confirmDelete}
+          message="¿Estás seguro de que deseas eliminar este cliente? Esta acción no se puede deshacer."
         />
       )}
     </div>
