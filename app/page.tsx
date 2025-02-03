@@ -9,8 +9,6 @@ import {
   query,
   where,
   orderBy,
-  Timestamp,
-  updateDoc,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import ClientForm from "../components/ClientForm";

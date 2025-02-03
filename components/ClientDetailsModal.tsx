@@ -1,6 +1,6 @@
 // components/ClientDetailsModal.tsx
 import React from "react";
-import { Client, ClientDetailsModalProps } from "../types/Client";
+import { ClientDetailsModalProps } from "../types/Client";
 
 const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
   isOpen,

@@ -1,6 +1,6 @@
 // components/ClientList.tsx
 import { FC } from "react";
-import { Client, ClientListProps } from "../types/Client";
+import { ClientListProps } from "../types/Client";
 
 const ClientList: FC<ClientListProps> = ({
   clients,
