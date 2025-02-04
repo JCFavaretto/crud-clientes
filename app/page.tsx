@@ -1,5 +1,4 @@
 "use client";
-// app/page.tsx
 import { useEffect, useState } from "react";
 import {
   collection,
@@ -15,35 +14,35 @@ import ClientForm from "../components/ClientForm";
 import ClientList from "../components/ClientList";
 import ClientFilter from "../components/ClientFilter";
 import ClientDetailsModal from "../components/ClientDetailsModal";
-import ConfirmationModal from "../components/ConfirmationModal"; // Importar el modal de confirmación
+import ConfirmationModal from "../components/ConfirmationModal";
 import { Client } from "../types/Client";
 
 export default function Home() {
   const [clients, setClients] = useState<Client[]>([]);
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // Estado para el modal de confirmación
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [viewedClient, setViewedClient] = useState<Client | null>(null);
-  const [clientIdToDelete, setClientIdToDelete] = useState<string | null>(null); // ID del cliente a eliminar
+  const [clientIdToDelete, setClientIdToDelete] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [modalState, setModalState] = useState({
+    isAddEditModalOpen: false,
+    isDetailsModalOpen: false,
+    isDeleteModalOpen: false,
+  });
 
   // Obtener todos los clientes de Firebase
   const fetchClients = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, "clients"));
-      console.log("querySnapshot");
-      console.log(querySnapshot);
       const clientsData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       })) as Client[];
-      console.log("clientsData");
-      console.log(clientsData);
       setClients(clientsData);
       setFilteredClients(clientsData);
-    } catch (error) {
-      console.error("Error al obtener clientes:", error);
+    } catch (err) {
+      console.error("Error al obtener clientes:", err);
+      handleError("No se pudieron cargar los clientes.");
     }
   };
 
@@ -51,124 +50,155 @@ export default function Home() {
     fetchClients();
   }, []);
 
-  // Filtrar y ordenar clientes
-  const handleFilter = async (searchTerm: string, sortBy: string) => {
-    let q;
+  // Filtrar y ordenar clientes localmente
+  const handleFilter = (searchTerm: string, sortBy: string) => {
     const [field, order] = sortBy.split("-") as [string, "asc" | "desc"];
+    let filtered = [...clients];
+
     if (searchTerm) {
-      q = query(
-        collection(db, "clients"),
-        where("name", ">=", searchTerm),
-        where("name", "<=", searchTerm + "\uf8ff"),
-        orderBy(field, order)
+      filtered = filtered.filter((client) =>
+        client.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
-    } else {
-      q = query(collection(db, "clients"), orderBy(field, order));
     }
-    const querySnapshot = await getDocs(q);
-    const filteredData = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Client[];
-    setFilteredClients(filteredData);
+
+    filtered.sort((a, b) => {
+      if (order === "asc") {
+        return (a[field as keyof Client] ?? "") >
+          (b[field as keyof Client] ?? "")
+          ? 1
+          : -1;
+      } else {
+        return (a[field as keyof Client] ?? "") <
+          (b[field as keyof Client] ?? "")
+          ? 1
+          : -1;
+      }
+    });
+
+    setFilteredClients(filtered);
   };
 
   // Reiniciar filtros
   const handleReset = () => {
-    setFilteredClients(clients); // Restaurar la lista original
+    setFilteredClients(clients);
+  };
+
+  // Manejar errores
+  const handleError = (message: string) => {
+    setError(message);
+    setTimeout(() => setError(null), 5000);
   };
 
   // Abrir modal para agregar/editar cliente
   const handleAdd = () => {
-    setSelectedClient(null); // Limpiar cliente seleccionado
-    setIsModalOpen(true);
+    setSelectedClient(null);
+    setModalState({ ...modalState, isAddEditModalOpen: true });
   };
 
   const handleEdit = (client: Client) => {
-    setSelectedClient(client); // Establecer cliente seleccionado
-    setIsModalOpen(true);
+    setSelectedClient(client);
+    setModalState({ ...modalState, isAddEditModalOpen: true });
   };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);
+    setModalState({ ...modalState, isAddEditModalOpen: false });
   };
 
   // Abrir modal de detalles
   const handleView = (client: Client) => {
-    setViewedClient(client); // Establecer cliente seleccionado
-    setIsDetailsModalOpen(true);
+    setViewedClient(client);
+    setModalState({ ...modalState, isDetailsModalOpen: true });
   };
 
   const handleCloseDetailsModal = () => {
-    setIsDetailsModalOpen(false);
+    setModalState({ ...modalState, isDetailsModalOpen: false });
   };
 
   // Abrir modal de confirmación para eliminar
   const handleDelete = (id: string) => {
-    setClientIdToDelete(id); // Guardar el ID del cliente a eliminar
-    setIsDeleteModalOpen(true); // Mostrar el modal de confirmación
+    setClientIdToDelete(id);
+    setModalState({ ...modalState, isDeleteModalOpen: true });
   };
 
   // Confirmar eliminación
   const confirmDelete = async () => {
     if (clientIdToDelete) {
       try {
-        await deleteDoc(doc(db, "clients", clientIdToDelete)); // Eliminar cliente
-        fetchClients(); // Actualizar lista
-      } catch (error) {
-        console.error("Error al eliminar cliente:", error);
+        await deleteDoc(doc(db, "clients", clientIdToDelete));
+        setClients((prevClients) =>
+          prevClients.filter((client) => client.id !== clientIdToDelete)
+        );
+        setFilteredClients((prevFiltered) =>
+          prevFiltered.filter((client) => client.id !== clientIdToDelete)
+        );
+      } catch (err) {
+        console.error("Error al eliminar cliente:", err);
+        handleError("No se pudo eliminar el cliente.");
       } finally {
-        setIsDeleteModalOpen(false); // Cerrar el modal
-        setClientIdToDelete(null); // Limpiar el ID
+        setModalState({ ...modalState, isDeleteModalOpen: false });
+        setClientIdToDelete(null);
       }
     }
   };
 
   // Cancelar eliminación
   const cancelDelete = () => {
-    setIsDeleteModalOpen(false); // Cerrar el modal
-    setClientIdToDelete(null); // Limpiar el ID
+    setModalState({ ...modalState, isDeleteModalOpen: false });
+    setClientIdToDelete(null);
   };
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold mb-4">CRUD de Clientes</h1>
+    <div className="p-4 md:p-8">
+      {/* Mensaje de Error */}
+      {error && (
+        <div className="bg-red-100 text-red-700 p-2 rounded mb-4">{error}</div>
+      )}
+
+      {/* Encabezado */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">CRUD de Clientes</h1>
         <button
           onClick={handleAdd}
-          className="bg-blue-500 text-white p-2 rounded mb-4"
+          className="bg-blue-500 text-white p-2 rounded mt-4 md:mt-0"
         >
           Agregar Cliente
         </button>
       </div>
+
+      {/* Filtro */}
       <ClientFilter onFilter={handleFilter} onReset={handleReset} />
+
+      {/* Lista de Clientes */}
       <ClientList
         clients={filteredClients}
-        onDelete={handleDelete} // Pasar la función para abrir el modal de confirmación
+        onDelete={handleDelete}
         onEdit={handleEdit}
         onView={handleView}
       />
+
       {/* Modal de Formulario */}
-      {isModalOpen && (
+      {modalState.isAddEditModalOpen && (
         <ClientForm
-          isOpen={isModalOpen}
+          isOpen={modalState.isAddEditModalOpen}
           onClose={handleCloseModal}
           fetchClients={fetchClients}
-          initialClient={selectedClient || undefined} // Pasar cliente seleccionado
+          initialClient={selectedClient || undefined}
         />
       )}
+
       {/* Modal de Detalles */}
-      {isDetailsModalOpen && viewedClient && (
+      {modalState.isDetailsModalOpen && viewedClient && (
         <ClientDetailsModal
-          isOpen={isDetailsModalOpen}
+          isOpen={modalState.isDetailsModalOpen}
           onClose={handleCloseDetailsModal}
           client={viewedClient}
         />
       )}
+
       {/* Modal de Confirmación */}
-      {isDeleteModalOpen && (
+      {modalState.isDeleteModalOpen && (
         <ConfirmationModal
-          isOpen={isDeleteModalOpen}
+          isOpen={modalState.isDeleteModalOpen}
           onClose={cancelDelete}
           onConfirm={confirmDelete}
           message="¿Estás seguro de que deseas eliminar este cliente? Esta acción no se puede deshacer."

@@ -10,7 +10,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <h2 className="text-xl font-bold text-primary my-4">Confirmación</h2>
+      <h2 className="text-xl font-bold text-primary my-4">
+        Confirmar eliminación
+      </h2>
       <p>{message}</p>
       <div className="flex justify-end space-x-2 mt-4">
         <button
