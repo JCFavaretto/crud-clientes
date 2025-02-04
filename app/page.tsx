@@ -14,7 +14,6 @@ import { db } from "../lib/firebase";
 import ClientForm from "../components/ClientForm";
 import ClientList from "../components/ClientList";
 import ClientFilter from "../components/ClientFilter";
-import Modal from "../components/Modal";
 import ClientDetailsModal from "../components/ClientDetailsModal";
 import ConfirmationModal from "../components/ConfirmationModal"; // Importar el modal de confirmación
 import { Client } from "../types/Client";
