@@ -32,10 +32,14 @@ export default function Home() {
   const fetchClients = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, "clients"));
+      console.log("querySnapshot");
+      console.log(querySnapshot);
       const clientsData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       })) as Client[];
+      console.log("clientsData");
+      console.log(clientsData);
       setClients(clientsData);
       setFilteredClients(clientsData);
     } catch (error) {
