@@ -4,10 +4,17 @@ import { Timestamp } from "firebase/firestore";
 export interface Client {
   id?: string;
   name: string;
-  email: string;
-  nacimiento: Timestamp | string;
+  email?: string;
+  nacimiento?: Timestamp | string;
   phone: string;
-  dni: string;
+  dni?: string;
+}
+
+export interface ClientFormProps {
+  fetchClients: () => void;
+  isOpen: boolean;
+  onClose: () => void;
+  initialClient?: Client;
 }
 
 export interface ClientListProps {

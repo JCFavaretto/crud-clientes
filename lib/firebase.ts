@@ -1,18 +1,18 @@
-// Import the functions you need from the SDKs you need
+// lib/firebase.ts
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
+// Configuración de Firebase usando variables de entorno
 const firebaseConfig = {
-  apiKey: "AIzaSyDvYD8Va1Spc3EcPCA_L0wPdcg-M5bPgpU",
-  authDomain: "clientes-mama.firebaseapp.com",
-  projectId: "clientes-mama",
-  storageBucket: "clientes-mama.firebasestorage.app",
-  messagingSenderId: "165684884951",
-  appId: "1:165684884951:web:bf0e9dec46ee8134ebc792",
-  measurementId: "G-WG0HYM3QD7",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase
+// Inicializar Firebase
 const app = initializeApp(firebaseConfig);
-
 export const db = getFirestore(app);

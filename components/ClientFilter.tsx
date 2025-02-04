@@ -8,9 +8,8 @@ interface ClientFilterProps {
 
 const ClientFilter: React.FC<ClientFilterProps> = ({ onFilter, onReset }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("name-asc"); // Valor inicial: ordenar por nombre ascendente
-
-  // Llamar a la función de filtro cuando cambia el término de búsqueda o el criterio de orden
+  const [sortBy, setSortBy] = useState("name-asc");
+  
   useEffect(() => {
     onFilter(searchTerm, sortBy);
   }, [searchTerm, sortBy, onFilter]);

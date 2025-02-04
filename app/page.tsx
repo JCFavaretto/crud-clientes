@@ -147,13 +147,12 @@ export default function Home() {
       />
       {/* Modal de Formulario */}
       {isModalOpen && (
-        <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
-          <ClientForm
-            fetchClients={fetchClients}
-            onClose={handleCloseModal}
-            initialClient={selectedClient || undefined} // Pasar cliente seleccionado
-          />
-        </Modal>
+        <ClientForm
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          fetchClients={fetchClients}
+          initialClient={selectedClient || undefined} // Pasar cliente seleccionado
+        />
       )}
       {/* Modal de Detalles */}
       {isDetailsModalOpen && viewedClient && (
